@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const secrets = require('../settings/secrets.json');
 const clientId = secrets.discord.client_id;
-//const guildId = discord.guildId;
+const guildId = "1128738286635077805";
 const token = secrets.discord.token;
 
 
@@ -52,5 +52,6 @@ function deploy_commands(guildid) {
 	})();
 
 }
+deploy_commands();
 
 module.exports = {deploy_commands};

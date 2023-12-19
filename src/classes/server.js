@@ -31,10 +31,33 @@ class Server {
         this.console_output = [];
         
         this.spawn;
+
+        this.is_server_ready = false;
+    }
+
+    SetServerReady(value) {
+        this.is_server_ready = value;
+    }
+
+
+
+    CheckServerReady(data) {
+        this.SetServerReady(true);
+    }
+
+    async IsServerReady() {
+        return new Promise((resolve) => {
+            let inter = setInterval(() => {
+                if (this.is_server_ready == true) {
+                    clearInterval(inter);
+                    resolve();
+                }
+            }, 500);
+        });
     }
 
     StartCommand() {
-
+        return undefined;
     }
 
     TestFuncONE() {
@@ -66,7 +89,7 @@ class Server {
         let final_setts = Object.assign({}, setts, pass_setts);
 
         const f = fs.openSync(path.resolve(`${settings.base_game_dir}/${this.dir}/nimba-config.json`), "w");
-        fs.writeSync(f, JSON.stringify(final_setts, undefined, "\n"));
+        fs.writeSync(f, JSON.stringify(final_setts, undefined, " "));
     }
 
     FirstRun() {
@@ -78,6 +101,7 @@ class Server {
     DownloadFiles() {
         return new Promise((resolve, reject) => {
             this.download_urls.forEach((value) => {
+                console.log("Downloading : " + value);
                 const basename = path.basename(value);
                 const outFile = fs.createWriteStream(path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}/${basename}`))
                 const request = http.get(value, (response) => {
@@ -118,6 +142,8 @@ class Server {
         if (this.console_output.length > 5000) {
             this.console_output = this.console_output.shift()
         }
+        this.CheckServerReady(data.toString());
+
     }
 
     Spawn_stdout_func(data) {
@@ -138,11 +164,44 @@ class Server {
     }
 
     WriteToSpawn(message) {
+        //TODO catch for no spawn
         const s = new Readable();
         s.push(message);
         s.push(null);
 
         s.pipe(this.spawn.stdin);
+        this.spawn.stdout.on("data", data => {
+
+        });
+    }
+
+    WriteToSpawnAndGetResponse(message, capture_ms = 500) {
+        return new Promise(async (resolve, reject) => {
+            //TODO catch for no spawn
+            const s = new Readable();
+            s.push(message);
+            s.push(null);
+
+            s.pipe(this.spawn.stdin);
+
+            let sp = this.spawn;
+            let outData = [];
+            
+            function listener(data) {
+                //console.log(data.toString());
+                outData.push(data.toString())
+            }
+            //console.log("Adding Listener");
+            this.spawn.stdout.on("data", listener);
+            
+            //Get all data in the next capture_ms
+            let timeout = setTimeout(() => {
+                sp.stdout.removeListener("data", listener);
+                resolve(outData);
+            }, capture_ms);
+            
+        });
+        
     }
 
     Init_spawn_listeners() {
@@ -162,15 +221,17 @@ class Server {
         if (this.cwd == undefined ||
             this.cwd == "" ||
             this.cwd == null || 
-            this.start_command == undefined ||
-            this.start_command == "" ||
-            this.start_command == null) {
+            this.StartCommand() == undefined ||
+            this.StartCommand() == "" ||
+            this.StartCommand() == null) {
             console.error("CWD or Start Command Cannot be null : Stoped Start")
             return;
         }
-
-        this.spawn = spawn(this.StartCommand(), [], {cwd: `${settings.base_game_dir}/${this.dir}/${this.cwd}`, shell:true});
+        let startCommand = this.StartCommand();
+        let cwd_path = path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}`)
+        this.spawn = spawn(this.StartCommand(), [], {cwd: path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}`), shell:true});
         this.Init_spawn_listeners();
+        //spawn().stdout.on()
         
     }
 
@@ -182,12 +243,32 @@ class Server {
         this.ForceKill();
     }
 
+    /**
+     * Is the spawn instance launched?
+     */
     GetShellStatus() {
-
+        if (this.spawn == undefined) {
+            return false;
+        }
+        return true;
     }
 
-    GetStatus() {
+    async GetStatus() {
+        return {shell_status: this.GetShellStatus()}
+    }
+    
+    async GetStatusString() {
+        const statusDict = await this.GetStatus();
+        let outString = "Stopped";
+        if (statusDict.shell_status == true) {
+            if (this.is_server_ready == true) {
+                outString = "Running";
 
+            } else {
+                outString = "Loading"
+            }
+        }
+        return outString;
     }
 
 }

@@ -1,4 +1,60 @@
 const { SlashCommandBuilder } = require('discord.js');
+const discordUtils = require("../../utils.js");
+
+/**
+ * Discord Command: /server new minecraft
+ */
+async function server_new_minecraft(interaction) {
+
+}
+
+/**
+ * Discord Command: /server config all
+ */
+async function server_config_all(interaction) {
+	
+}
+
+/**
+ * Discord Command: /server config get
+ */
+async function server_config_get(interaction) {
+	
+}
+
+/**
+ * Discord Command: /server config set
+ */
+async function server_config_set(interaction) {
+	
+}
+
+/**
+ * Discord Command: /server status
+ */
+async function server_status(interaction) {
+	
+}
+
+/**
+ * Discord Command: /server list
+ */
+async function server_list(interaction) {
+	let summaryDict = {};
+	for (var i = 0; i < global.server_list.length; i++) {
+		const openServer =  global.server_list[i];
+		const serverStatusString = await openServer.GetStatusString();
+		const serverLabel = openServer.label;
+		const serverType = openServer.type;
+		summaryDict[serverLabel] = `Type: ${serverType} > Status: ${serverStatusString}`;
+	}
+	const outEmbed = discordUtils.dictToEmbed(summaryDict);
+	outEmbed.embeds[0].setTitle("Server List");
+	outEmbed.embeds[0].setDescription("Currently loaded servers");
+	outEmbed.embeds[0].setTimestamp();
+	
+	interaction.reply(outEmbed);
+}
 
 /**
  * Decide what function to run depending on discord context
@@ -7,7 +63,40 @@ const { SlashCommandBuilder } = require('discord.js');
 async function server_command_director(interaction) {
 	// Command name is always server
 	//TODO: Get command context values
-	
+	const group = interaction.options.getSubcommandGroup();
+	const subcommand = interaction.options.getSubcommand();
+	switch (group) {
+		case ("new"):
+			switch (subcommand) {
+				case ("minecraft"):
+					await server_new_minecraft(interaction)
+					break;
+			}
+			break;
+		case ("config"):
+			switch (subcommand) {
+				case ("all"):
+					await server_config_all(interaction);
+					break;
+				case ("get"):
+					await server_config_get(interaction);
+					break;
+				case ("set"):
+					await server_config_set(interaction);
+					break;
+			}
+			break;
+		default:
+			switch (subcommand) {
+				case ("status"):
+					await server_status(interaction);
+					break;
+				case ("list"):
+					await server_list(interaction);
+					break;
+			}
+			break;
+	}
 }
 
 module.exports = {
@@ -48,10 +137,6 @@ module.exports = {
 				)
 				.addStringOption(option => 
 					option.setName("config_jar_args")
-						.setDescription("URL of jar file to download")
-				)
-				.addStringOption(option => 
-					option.setName("config_jar_file")
 						.setDescription("URL of jar file to download")
 				)
 			)
@@ -113,6 +198,17 @@ module.exports = {
 					.setDescription("Server Label")
 					.setRequired(true),
 				)
+				
+			)
+		.addSubcommand(subcommand => 
+			subcommand
+				.setName("list")
+				.setDescription("List all loaded servers")
+				// .addStringOption(option => 
+				// 	option.setName("label")
+				// 	.setDescription("Server Label")
+				// 	.setRequired(true),
+				// )
 				
 			),
 	async execute(interaction) {

@@ -12,6 +12,15 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\src\\main.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Deploy Discord Commands",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\src\\discord\\deploy-commands.js"
         }
     ]
 }

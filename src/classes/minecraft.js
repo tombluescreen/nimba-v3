@@ -14,9 +14,18 @@ class Minecraft extends Server {
 
         this.type = "minecraft";
         this.java_path = defaultArg(args.java_path, "java");
-        this.java_args = defaultArg(args.java_path, "");
-        this.jar_path = defaultArg(args.java_path, "");
-        this.jar_args = defaultArg(args.java_path, "nogui");
+        this.java_args = defaultArg(args.java_args, "");
+        this.jar_path = defaultArg(args.jar_path, "");
+        this.jar_args = defaultArg(args.jar_args, "nogui");
+    }
+
+    CheckServerReady(str) {
+        const re = /Done \([0-9]*\.[0-9]*s\).*"help"/gm;
+        let test_response = re.test(str);
+        if (test_response == true) {
+            this.SetServerReady(true);
+            //console.log("Server Ready!!!!");
+        }
     }
 
     StartCommand() {
@@ -37,7 +46,7 @@ class Minecraft extends Server {
     InitConfigFile(pass_setts = {}) {
         let setts = {};
 
-        setts.java_path = this.jar_path;
+        setts.java_path = this.java_path;
         setts.java_args = this.java_args;
         setts.jar_path = this.jar_path;
         setts.jar_args = this.jar_args;
@@ -55,6 +64,34 @@ class Minecraft extends Server {
         
     }
 
+    async GetMCPlayerCountFromShell() {
+        if (this.is_server_ready == false) {
+            return false;
+        }
+        let res = await this.WriteToSpawnAndGetResponse("list", 1000);
+        const player_count_regex = /There are ([0-9]+) of a max of ([0-9]+) players online:/gm;
+        let match_res = player_count_regex.exec(res[0]); //Todo: Doesnt account for random data in res
+        if (match_res == null) {
+            return false;
+        }
+        const player_count = match_res[1];
+        const player_max = match_res[2];
+
+        return [player_count, player_max];
+    }
+
+    async GetStatus() {
+
+        let playercountshell = await this.GetMCPlayerCountFromShell(); 
+
+        return {
+            shell_status: this.GetShellStatus(),
+            player_count: playercountshell,
+            mc_ip_status: null,
+        }
+        
+    }
+
 }
 
-module.exports = {Minecraft};
+module.exports = { Minecraft };

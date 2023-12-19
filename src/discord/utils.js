@@ -1,4 +1,6 @@
 const Discord = require("discord.js");
+const { EmbedBuilder } = require('discord.js');
+
 const path = require("path");
 const fs = require("fs");
 
@@ -78,4 +80,21 @@ function init_discordjs() {
 
 }
 
-module.exports = {init_discordjs};
+
+function dictToEmbed(in_dict) {
+	const outEmbed = new EmbedBuilder()
+		.setColor(0x0099FF)
+		.setTitle("<Dict to Embed Title>")
+		.setDescription("Dict to embed decription");
+	
+	for (const [key, value] of Object.entries(in_dict)) {
+		if (value.constructor == Object) {
+			//Value is also a dict
+		}
+		console.log(key, value);
+		outEmbed.addFields({name: `**${key}** *${value}*`, value: '\t'});
+	}
+	return { embeds: [outEmbed] };
+}
+
+module.exports = {init_discordjs, dictToEmbed};
