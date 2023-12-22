@@ -7,6 +7,7 @@ const { Minecraft } = require("./classes/minecraft.js");
 const { Server } = require("./classes/server.js");
 
 const disc = require("./discord/utils.js");
+const discPerms = require("./discord/discord-permissions.js");
 
 global.server_list = [];
 
@@ -65,19 +66,41 @@ function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 } 
 
+var events = require('events');
+ 
+
 async function main() {
+    //var eventEmitter = new events.EventEmitter();    
     
+    //eventEmitter.on();
+
+    //const inter = setInterval(() => {
+    //    eventEmitter.emit("egg");
+    //});
+
+    //return;
     //await test();
     //await mc.InitFileSystem();
+
+    //let first_parent_path = "C:\\Users\\thoma\\Downloads\\mcser\\server.jar";
+    //let first_match = first_parent_path.match(/\/|\\/g);
+
     await loadServersFromFolders();
+    discPerms.savePerms(path.resolve(settings.base_game_dir));
+    
+    console.log(`Loaded ${global.server_list.length} servers`)
     disc.init_discordjs(); //Init discordjs
     //TODO: Register commands in all joined servers with deploy-command.js
-    global.server_list[0].Start();
-    await global.server_list[0].IsServerReady();
-    console.log("It works Lets goooo")
+    //global.server_list[0].Start();
+    //await global.server_list[0].IsServerReady();
+    //console.log("It works Lets goooo")
     //let beans = await server_list[0].WriteToSpawnAndGetResponse("list");
     //console.log(beans);
-    global.server_list[0].GetStatus();
+    //global.server_list[0].GetStatus();
+    //const inter = setInterval(() => {
+    //    console.log("Eggs and bacon")
+    //    global.server_list[0].WriteToSpawn("say hello");    
+    //}, 1000);
 
 }
 

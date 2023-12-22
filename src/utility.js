@@ -6,8 +6,21 @@ function defaultArg(value, default_value) {
     return value;
 }
 
-function shellCommand() {
-
+function checkDownloadURL(url) {
+    const allowed_domains = [
+        "forgecdn.net",
+        "mojang.com",
+        "modpacks.ch"
+    ]
 }
 
-module.exports = {shellCommand, defaultArg};
+function truncStringToSize(string, char_count) {
+    let newString = string;
+    if (string.length > char_count) {
+        newString = string.substring(0, char_count-4) + "..."
+        
+    }
+    return newString;
+}
+
+module.exports = { defaultArg, checkDownloadURL, truncStringToSize};

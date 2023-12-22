@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "dateformat": "^5.0.3",
+    "decompress": "^4.2.1",
+    "discord.js": "^14.14.1",
+    "node-fetch": "^2.7.0"
   }
 }

@@ -4,11 +4,11 @@ const path = require('node:path');
 
 const secrets = require('../settings/secrets.json');
 const clientId = secrets.discord.client_id;
-const guildId = "1128738286635077805";
+const guildIds = ["1128738286635077805", "632965369656639498"];
 const token = secrets.discord.token;
 
 
-function deploy_commands(guildid) {
+function deploy_commands() {
 	const commands = [];
 	// Grab all the command files from the commands directory you created earlier
 	const foldersPath = path.join(__dirname, 'commands');
@@ -39,10 +39,14 @@ function deploy_commands(guildid) {
 			console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
 			// The put method is used to fully refresh all commands in the guild with the current set
-			const data = await rest.put(
-				Routes.applicationGuildCommands(clientId, guildId),
-				{ body: commands },
-			);
+			for (let i = 0; i < guildIds.length; i++) {
+				console.log(`Registering to ${guildIds[i]}`);
+				const data = await rest.put(
+					Routes.applicationGuildCommands(clientId, guildIds[i]),
+					{ body: commands },
+				);
+			}
+			
 
 			console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 		} catch (error) {

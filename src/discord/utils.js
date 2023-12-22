@@ -3,12 +3,12 @@ const { EmbedBuilder } = require('discord.js');
 
 const path = require("path");
 const fs = require("fs");
-
+const { truncStringToSize } = require("../utility.js");
 
 const secrets = require("../settings/secrets.json")
 
 function init_discordjs() {
-    const client = new Discord.Client({ intents: [/*Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMembers*/] });
+    const client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildMembers] });
 
     client.commands = new Discord.Collection();
     const foldersPath = path.join(__dirname, './commands');
@@ -81,18 +81,65 @@ function init_discordjs() {
 }
 
 
-function dictToEmbed(in_dict) {
+function dictToEmbed(in_dict, use_keys = true) {
 	const outEmbed = new EmbedBuilder()
-		.setColor(0x0099FF)
-		.setTitle("<Dict to Embed Title>")
-		.setDescription("Dict to embed decription");
+	.setColor(0x0099FF)
+	.setTitle("<Dict to Embed Title>")
+	.setDescription("Dict to embed decription");
 	
+
+	//Dict logic
+	/*
+	One level dict:
+	{
+		"one":one,
+		"two":two.
+	}
+	These should be put into embed with each dict key as a field
+
+	Two Level dict:
+	{
+		"one":{
+			"three": three
+		},
+		
+	}
+	these should be summerized into a string
+	*/
+	let counter = 1;
 	for (const [key, value] of Object.entries(in_dict)) {
+		if (value == undefined || value == null) {
+			continue;
+		}
+		let fieldDict = {}
 		if (value.constructor == Object) {
 			//Value is also a dict
+			let dictList = [];
+			for (const [key_two, value_two] of Object.entries(value)) {
+				
+				if (value.constructor == Object) {
+					//value_two is also a dict
+					//cry
+				}
+				if (use_keys == true) {
+					dictList.push(`${key_two}: *${value_two}*`)
+				} else {
+					dictList.push(`*${value_two}*`)
+				}
+				
+			}
+			let dictString = dictList.join(", ");
+			fieldDict.name = truncStringToSize(`${counter}. '**${key}**' (` + dictString + ")", 256);
+			counter++;
+			fieldDict.value = "\t";
+		} else {
+			fieldDict.name = truncStringToSize(key.toString(), 256);
+			fieldDict.value = truncStringToSize(value.toString(), 1024);
 		}
-		console.log(key, value);
-		outEmbed.addFields({name: `**${key}** *${value}*`, value: '\t'});
+
+		//Embed char limits: https://discordjs.guide/popular-topics/embeds.html#editing-the-embedded-message-content
+		//console.log(key, value);
+		outEmbed.addFields(fieldDict);
 	}
 	return { embeds: [outEmbed] };
 }
