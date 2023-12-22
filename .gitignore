@@ -126,3 +126,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 src/settings/secrets.json
+src/settings/secrets.json
