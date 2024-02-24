@@ -26,9 +26,12 @@ class DiscordUpdateWrapper extends ProgressUpdateWrapper {
         this.previous_message_list.push(new_text);
     }
     update_line(reg_replace, new_value) {
-        const new_line = this.previous_message_list[this.previous_message_list.length-1].replace(reg_replace, new_value);
-        this.previous_message_list[this.previous_message_list.length-1] = new_line;
-        this.interaction.editReply(this.previous_message_list.join("\n"));
+        if (this.previous_message_list.length != 0) {
+            const new_line = this.previous_message_list[this.previous_message_list.length-1].replace(reg_replace, new_value);
+            this.previous_message_list[this.previous_message_list.length-1] = new_line;
+            this.interaction.editReply(this.previous_message_list.join("\n"));
+        }
+        
     }
 }
 

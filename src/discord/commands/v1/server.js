@@ -33,6 +33,13 @@ async function server_new_minecraft(interaction) {
 
 	let args = {};
 	args.label = interaction.options.getString("label");
+
+	const existingServer = findServerInGlobalList(args.label);
+	if (existingServer != undefined) {
+		interaction.reply(`A server named '${args.label}' already exists.`);
+		return;
+	}
+
 	args.template = defaultArg(interaction.options.getString("template"), "");
 	args.jar_file_type = defaultArg(interaction.options.getString("config_jar_file_type"), "jar");
 
@@ -63,17 +70,19 @@ async function server_new_minecraft(interaction) {
 	let new_mc = new Minecraft(args);
 	try {
 		await new_mc.initFileSystem(discord_reply_wrapper);
+		editPerm(path.resolve(`${settings.base_game_dir}/${new_mc.dir}/perms.json`), "user_whitelist", member.id, "allow", "add", "all");
 	} catch (e) {
 		discord_reply_wrapper.update_line(/$/gm, "\:x:");
 		discord_reply_wrapper.update(`Server init failed: ${e}`);
+		editPerm(path.resolve(`${settings.base_game_dir}/${new_mc.dir}/perms.json`), "user_whitelist", member.id, "allow", "add", "all");
 		return;
 	}
 	
 	global.server_list.push(new_mc);
 
 	//Add all perms for user who created server
-	editPerm(path.resolve(`${settings.base_game_dir}/${new_mc.dir}/perms.json`), "user_whitelist", member.id, "allow", "add", "all");
-	discord_reply_wrapper.update_line(/$/gm, "\:x:");
+	
+	discord_reply_wrapper.update_line(/$/gm, "\:white_check_mark:");
 	discord_reply_wrapper.update(`**Server '${new_mc.label}' created.**`);
 }
 
@@ -114,11 +123,19 @@ async function server_console_send(interaction) {
 	}
 
 	const argCommand = interaction.options.getString("command");
+	let send_response;
 
 	await interaction.deferReply();
-	let send_response = await foundServer.writeToSpawnAndGetResponse(argCommand);
+	try {
+		send_response = await foundServer.writeToSpawnAndGetResponse(argCommand);
+	} catch (e) {
+		interaction.editReply("Send command failed! (Maybe the server hasent started)");
+		return;
+	}
+	
+	if (send_response.length == 0) send_response = "*No response captured*"
 
-	interaction.editReply(send_response);
+	interaction.editReply(truncStringToSize(send_response.join("\n"), 2000));
 
 }
 
@@ -139,6 +156,11 @@ async function server_console_get(interaction) {
 
 	let console_list = foundServer.console_output.slice(-20).reverse();
 	
+	if (console_list.length == 0) {
+		interaction.reply("There are no console entries for this server");
+		return;
+	}
+
 	let allowed_console_list = [];
 
 	const string_seperator =  "\n"
@@ -158,6 +180,8 @@ async function server_console_get(interaction) {
 	if (allowed_console_list.length == 0) {
 		allowed_console_list.push(truncStringToSize(console_list[0], 2000 - string_seperator.length - 6));
 	}
+
+
 
 	interaction.reply("```" + allowed_console_list.reverse().join(string_seperator) + "```");
 }
@@ -207,8 +231,13 @@ async function server_permission_add(interaction) {
 			sub_key = "user_" + argList_type;
 			break;
 	}
+	try {
+		editPerm(path.resolve(`${settings.base_game_dir}/${foundServer.dir}/perms.json`), sub_key, argMention.id, argAllow_type, "add", argCommand_string);
+	} catch (e) {
+		interaction.reply("Permission change failed")
+		return;
 
-	editPerm(path.resolve(`${settings.base_game_dir}/${foundServer.dir}/perms.json`), sub_key, argMention.id, argAllow_type, "add", argCommand_string);
+	}
 
 	interaction.reply("Permission change successful")	
 }

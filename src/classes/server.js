@@ -234,17 +234,19 @@ class Server {
                 if (reply_wrapper != null) reply_wrapper.update_line(/$/gm, "\:white_check_mark:");
                 if (reply_wrapper != null) reply_wrapper.update("Downloading files... (this could take a while)");
                 await this.downloadFiles(reply_wrapper);
-                if (reply_wrapper != null) reply_wrapper.update_line(/$/gm, "\:white_check_mark:");
-                if (reply_wrapper != null) reply_wrapper.update("Performing first run...");
+                
 
                 this.server_port = getAvaliblePort();
                 this.saveConfigFile();
                 savePerms(path.resolve(`${settings.base_game_dir}/${this.dir}`));
-
+                if (reply_wrapper != null) reply_wrapper.update_line(/$/gm, "\:white_check_mark:");
+                if (reply_wrapper != null) reply_wrapper.update("Performing first run...");
                 const first_run_result = await this.firstRun();
                 
                 resolve();
-            } 
+            } else {
+                reject("A folder with that name already exists");
+            }
         });
     }
 
@@ -334,7 +336,10 @@ class Server {
      */
     writeToSpawnAndGetResponse(message, capture_ms = 500) {
         return new Promise(async (resolve, reject) => {
-            if (this.spawn == undefined) reject();
+            if (this.spawn == undefined) {
+                reject(); 
+                return;
+            } 
             //TODO catch for no spawn
             this.spawn.stdin.write(message + "\n");
 

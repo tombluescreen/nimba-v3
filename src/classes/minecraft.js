@@ -139,7 +139,7 @@ class Minecraft extends Server {
             this.pushErrToConsole(data.toString());
             
 
-            const fatal_server_fail_match = /Failed to start the minecraft server/gm;
+            const fatal_server_fail_match = /Failed to start the minecraft server|Exception stopping the server/gm;
             let fatal_server_fail_match_test = fatal_server_fail_match.test(data.toString());
             if (fatal_server_fail_match_test == true) {
                 this.setServerStatus(SERVER_STATUS.CRASHED(data.toString()));
@@ -154,7 +154,7 @@ class Minecraft extends Server {
      * @returns 
      */
     startCommand() {
-        const com = `"${this.java_path}" ${this.java_args} -jar "${this.jar_path}" ${this.jar_args}`;
+        const com = `"${this.java_path}" ${this.java_args} -jar "${this.jar_path}" ${this.jar_args} port ${this.server_port.port_number}`;
         return com;
     }
 
@@ -193,6 +193,10 @@ class Minecraft extends Server {
 
     setServerPropertiesPort() {
         //const f = fs.openSync(path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}/server.properties`), "r+");
+        if (!fs.existsSync(path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}/server.properties`))) {
+            throw new Error("server.properties does not exist");
+            return;
+        }
         var data = fs.readFileSync(path.resolve(`${settings.base_game_dir}/${this.dir}/${this.cwd}/server.properties`), { encoding: 'utf8', flag: 'r' });
         //server-port
         const server_port_regex = /server-port=[0-9]*/gm;
@@ -214,7 +218,7 @@ class Minecraft extends Server {
             await this.waitUntilServerReady();
             this.stop();
             this.setServerPropertiesPort();
-
+            
             resolve();
         })
         

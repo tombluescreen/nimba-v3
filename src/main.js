@@ -18,11 +18,11 @@ global.server_list = [];
 async function loadServersFromFolders() {
     return new Promise(async (resolve, reject) => {
         let dirs = fs.readdirSync(path.resolve(`${settings.base_game_dir}`), {withFileTypes:true}).filter(dirent => dirent.isDirectory())
-        console.log("Loading Servers from GAME_DIR");
+        console.log("Loading Servers from GAME_DIR: " + settings.base_game_dir);
         dirs.forEach((value) => {
             const config_path = path.resolve(`${value.path}/${value.name}/nimba-config.json`);
             if (fs.existsSync(config_path)) {
-                console.log("Found Config file")
+                console.log("Found Config file: " + config_path);
                 const {type} = require(config_path);
                 var ba;
                 switch (type) {
